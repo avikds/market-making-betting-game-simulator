@@ -70,8 +70,46 @@ def pay_per_reroll_die_game(sides, reroll_cost):
         'value': float(best_value)
     }
 
-# Step 4 - red_black_card_game_value (not yet solved)
-# TODO: implement
+# Step 4 - red_black_card_game_value
+def red_black_card_game_value(num_red, num_black):
+    # Dynamic programming with memoization.
+    # V(r, b) is the optimal expected payout with r red and b black cards remaining.
+    memo = {}
+
+    def value(r, b):
+        if r == 0 and b == 0:
+            return 0.0
+
+        state = (r, b)
+        if state in memo:
+            return memo[state]
+
+        total = r + b
+
+        red_value = 0.0
+        if r > 0:
+            red_value = 1 + value(r - 1, b)
+
+        black_value = 0.0
+        if b > 0:
+            black_value = -1 + value(r, b - 1)
+
+        continuation_value = (
+            r / total * red_value
+            + b / total * black_value
+        )
+
+        # The player can always stop and receive 0.
+        # Ties resolve in favor of stopping.
+        memo[state] = max(0.0, continuation_value)
+        return memo[state]
+
+    continuation_value = value(num_red, num_black)
+
+    return {
+        'value': float(continuation_value),
+        'stop_now': continuation_value == 0.0
+    }
 
 # Step 5 - make_quotes (not yet solved)
 # TODO: implement
