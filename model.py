@@ -198,8 +198,38 @@ def update_fair_value_from_trade(fair_value, side, bid, ask, adjustment):
     else:
         raise ValueError("side must be 'buy' or 'sell'")
 
-# Step 12 - update_remaining_card_value (not yet solved)
-# TODO: implement
+# Step 12 - update_remaining_card_value
+def update_remaining_card_value(remaining_counts, revealed_value):
+    # Create a copy so the input dictionary is not mutated.
+    updated_counts = dict(remaining_counts)
+
+    # Decrement the revealed card's count.
+    if revealed_value not in updated_counts:
+        raise ValueError("revealed_value is not present in remaining_counts")
+
+    updated_counts[revealed_value] -= 1
+
+    # Remove the entry when no cards of that value remain.
+    if updated_counts[revealed_value] == 0:
+        del updated_counts[revealed_value]
+
+    # Compute the expected value of a uniformly drawn card from the remaining deck.
+    total_cards = sum(updated_counts.values())
+
+    if total_cards == 0:
+        expected = 0.0
+    else:
+        values = list(updated_counts.keys())
+        probabilities = [
+            count / total_cards
+            for count in updated_counts.values()
+        ]
+        expected = expected_value(values, probabilities)
+
+    return {
+        'remaining_counts': updated_counts,
+        'expected_value': float(expected)
+    }
 
 # Step 13 - run_market_making_episode (not yet solved)
 # TODO: implement
