@@ -11,8 +11,28 @@ def expected_value(values, probabilities):
     # Expected value = sum(outcome * probability)
     return float(sum(value * probability for value, probability in zip(values, probabilities)))
 
-# Step 2 - one_reroll_die_value (not yet solved)
-# TODO: implement
+# Step 2 - one_reroll_die_value
+def one_reroll_die_value(sides):
+    # Expected value of the second roll
+    probabilities = [1 / sides] * sides
+    faces = list(range(1, sides + 1))
+    reroll_value = expected_value(faces, probabilities)
+
+    # Reroll when the first-roll face is worse than the expected
+    # value of taking the mandatory second roll.
+    reroll_faces = [face for face in faces if face < reroll_value]
+
+    # Expected winnings under the optimal keep-or-reroll policy
+    optimal_values = [
+        reroll_value if face in reroll_faces else face
+        for face in faces
+    ]
+    value = expected_value(optimal_values, probabilities)
+
+    return {
+        'value': value,
+        'reroll_faces': sorted(reroll_faces)
+    }
 
 # Step 3 - pay_per_reroll_die_game (not yet solved)
 # TODO: implement
