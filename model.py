@@ -34,8 +34,41 @@ def one_reroll_die_value(sides):
         'reroll_faces': sorted(reroll_faces)
     }
 
-# Step 3 - pay_per_reroll_die_game (not yet solved)
-# TODO: implement
+# Step 3 - pay_per_reroll_die_game
+def pay_per_reroll_die_game(sides, reroll_cost):
+    # Evaluate every possible keep-threshold.
+    # For threshold t, faces < t are rerolled and faces >= t are kept.
+    # If V is the value at the start:
+    #
+    # V = (sum(kept faces) + (# rerolls) * (V - reroll_cost)) / sides
+    #
+    # Solving for V:
+    # V = (sum(kept faces) - (# rerolls) * reroll_cost) / (# kept faces)
+
+    best_threshold = 1
+    best_value = float("-inf")
+
+    for threshold in range(1, sides + 1):
+        kept_faces = list(range(threshold, sides + 1))
+        reroll_count = threshold - 1
+
+        kept_sum = sum(kept_faces)
+        kept_count = len(kept_faces)
+
+        value = (
+            kept_sum - reroll_count * reroll_cost
+        ) / kept_count
+
+        # Use < so that the smallest threshold is selected when
+        # multiple thresholds have the same expected value.
+        if value > best_value:
+            best_value = value
+            best_threshold = threshold
+
+    return {
+        'threshold': best_threshold,
+        'value': float(best_value)
+    }
 
 # Step 4 - red_black_card_game_value (not yet solved)
 # TODO: implement
