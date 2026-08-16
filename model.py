@@ -231,8 +231,83 @@ def update_remaining_card_value(remaining_counts, revealed_value):
         'expected_value': float(expected)
     }
 
-# Step 13 - run_market_making_episode (not yet solved)
-# TODO: implement
+# Step 13 - run_market_making_episode
+def run_market_making_episode(true_value, counterparty_sides, initial_fair_value, config):
+    fair_value = float(initial_fair_value)
+    state = {
+        'cash': 0.0,
+        'inventory': 0.0
+    }
+    history = []
+
+    base_spread = config.get('base_spread', 0)
+    uncertainty = config.get('uncertainty', 0)
+    skew_strength = config.get('skew_strength', 0)
+    belief_adjustment = config.get('belief_adjustment', 0)
+
+    # Determine the total spread from the base spread and uncertainty.
+    spread_width = uncertainty_spread(base_spread, uncertainty)
+
+    for side in counterparty_sides:
+        # Start with a symmetric quote around the current fair value.
+        symmetric_quotes = make_quotes(fair_value, spread_width)
+
+        # Skew the quote to manage current inventory.
+        quotes = inventory_skewed_quotes(
+            fair_value,
+            spread_width,
+            state['inventory'],
+            skew_strength
+        )
+
+        # Keep the symmetric quote helper in the quoting pipeline.
+        # With zero inventory/skew, quotes are exactly symmetric_quotes.
+        if skew_strength == 0 or state['inventory'] == 0:
+            quotes = symmetric_quotes
+
+        bid = quotes['bid']
+        ask = quotes['ask']
+
+        # Execute the counterparty's trade against our quote.
+        state = execute_trade(
+            state,
+            side,
+            bid,
+            ask
+        )
+
+        # Update our fair-value belief after observing the trade.
+        fair_value = update_fair_value_from_trade(
+            fair_value,
+            side,
+            bid,
+            ask,
+            belief_adjustment
+        )
+
+        history.append({
+            'bid': bid,
+            'ask': ask,
+            'side': side,
+            'cash': state['cash'],
+            'inventory': state['inventory'],
+            'fair_value': fair_value
+        })
+
+    # Liquidate remaining inventory at the true settlement value.
+    pnl = mark_to_market_pnl(
+        state['cash'],
+        state['inventory'],
+        true_value
+    )
+
+    return {
+        'pnl': float(pnl),
+        'cash': float(state['cash']),
+        'inventory': float(state['inventory']),
+        'fair_value': float(fair_value),
+        'history': history
+    }
 
 # Step 14 - summarize_episode_pnls (not yet solved)
 # TODO: implement
